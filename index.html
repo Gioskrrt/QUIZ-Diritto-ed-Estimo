@@ -39,19 +39,17 @@ function picks(){return exam?examAnswers:answers}
 function stats(){const a=picks(),done=active.filter(q=>a[key(q)]);const good=done.filter(q=>a[key(q)]===q.correct).length;return {done:done.length,good,bad:done.length-good,total:active.length}}
 function refresh(){exam=false;reviewing=false;finished=false;active=getActive();for(const q of active)delete answers[key(q)];save();current=0;render()}
 function topScroll(){
-  const card = document.getElementById('card');
-  const target = card && !card.classList.contains('hidden')
-    ? card
-    : document.getElementById('result');
+  requestAnimationFrame(() => {
+    const target = document.getElementById('question');
+    if (!target) return;
 
-  if (!target) return;
+    const y = target.getBoundingClientRect().top
+      + window.scrollY - 16;
 
-  const y = target.getBoundingClientRect().top
-    + window.pageYOffset - 12;
-
-  window.scrollTo({
-    top: Math.max(0, y),
-    behavior: 'smooth'
+    window.scrollTo({
+      top: Math.max(0, y),
+      behavior: 'instant'
+    });
   });
 }
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
