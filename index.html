@@ -38,7 +38,22 @@ function getActive(){const pool=selectedPool();const filtered=$('mode').value===
 function picks(){return exam?examAnswers:answers}
 function stats(){const a=picks(),done=active.filter(q=>a[key(q)]);const good=done.filter(q=>a[key(q)]===q.correct).length;return {done:done.length,good,bad:done.length-good,total:active.length}}
 function refresh(){exam=false;reviewing=false;finished=false;active=getActive();for(const q of active)delete answers[key(q)];save();current=0;render()}
-function topScroll(){window.scrollTo({top:0,behavior:'smooth'})}
+function topScroll(){
+  const card = document.getElementById('card');
+  const target = card && !card.classList.contains('hidden')
+    ? card
+    : document.getElementById('result');
+
+  if (!target) return;
+
+  const y = target.getBoundingClientRect().top
+    + window.pageYOffset - 12;
+
+  window.scrollTo({
+    top: Math.max(0, y),
+    behavior: 'smooth'
+  });
+}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function startExam(){if(exam&&!confirm('Vuoi ricominciare la prova finale? Le risposte attuali andranno perse.'))return;const d=cyclePick(DATA.filter(q=>areaOf(q)==='diritto'),10,'exam|diritto'),e=cyclePick(DATA.filter(q=>areaOf(q)==='estimo'),10,'exam|estimo');if(d.length!==10||e.length!==10){alert('Non ci sono abbastanza domande per creare la prova finale.');return}active=shuffle([...d,...e]);exam=true;reviewing=false;finished=false;examAnswers={};current=0;render();topScroll()}
 function showResult(){const s=stats();if(exam&&!reviewing&&s.done!==s.total){alert('Rispondi a tutte le 20 domande prima di consegnare.');return}finished=true;reviewing=false;$('card').classList.add('hidden');$('result').classList.remove('hidden');$('percentage').textContent=(s.total?(100*s.good/s.total).toFixed(1).replace('.',','):0)+'%';$('finalGood').textContent=s.good;$('finalBad').textContent=s.bad;let pass=s.bad<=3;const areaResults=$('areaResults');areaResults.replaceChildren();areaResults.classList.toggle('hidden',!exam);if(exam){const per=['diritto','estimo'].map(area=>{const qs=active.filter(q=>areaOf(q)===area);const good=qs.filter(q=>examAnswers[key(q)]===q.correct).length;return {area,good,bad:qs.length-good}});pass=per.every(x=>x.bad<=3);for(const r of per){const box=document.createElement('div');box.className='area-result';box.innerHTML='<h3>'+r.area.toUpperCase()+'</h3><p>Corrette: <b>'+r.good+'/10</b></p><p>Errate: <b>'+r.bad+'/10</b></p><p class="'+(r.bad<=3?'pass':'fail')+'"><b>'+(r.bad<=3?'PROMOSSO':'BOCCIATO')+'</b></p>';areaResults.append(box)}}$('verdict').textContent=pass?'PROMOSSO':'BOCCIATO';$('verdict').className='verdict '+(pass?'pass':'fail');$('resultIcon').textContent=pass?'🎓':'📘';$('resultRule').textContent=exam?'Per superare la prova devi commettere al massimo 3 errori in Diritto E al massimo 3 errori in Estimo. Le due soglie sono indipendenti.':'Criterio allenamento: massimo 3 errori su '+s.total+' domande.';$('restart').textContent=exam?'Nuova prova finale':'Nuovo tentativo';$('review').textContent='Rivedi le risposte';topScroll()}
